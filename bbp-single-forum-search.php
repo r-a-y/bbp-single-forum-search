@@ -35,6 +35,7 @@ class bbP_Single_Forum_Search {
 	public function __construct() {
 		add_action( 'bbp_template_before_single_forum',         array( $this, 'add_search_form' ) );
 		add_filter( 'bbp_after_has_search_results_parse_args' , array( $this, 'modify_search_results_query' ) );
+		add_filter( 'bbp_get_search_pagination_links',          array( $this, 'modify_search_pagination_links' ) );
 		add_filter( 'bbp_get_search_results_url',               array( $this, 'modify_search_results_url' ) );
 		add_filter( 'bbp_get_search_title',                     array( $this, 'modify_search_title' ), 10, 2 );
 	}
@@ -92,6 +93,24 @@ class bbP_Single_Forum_Search {
 		}
 
 		return $r;
+	}
+
+	/**
+	 * Add our special forum ID to the forum search pagination links.
+	 *
+	 * This so we can filter search results by a specific forum.
+	 *
+	 * @param string $retval Existing search pagination links
+	 * @return string
+	 */
+	public function modify_search_pagination_links( $retval = '' ) {
+		if ( empty( $_GET['bbp_forum_id'] ) ) {
+			return $retval;
+		}
+
+		$retval = str_replace( "/'>", "/?bbp_forum_id=" . (int) $_GET['bbp_forum_id'] . "'>", $retval );
+		$retval = str_replace( '/">', '/?bbp_forum_id=' . (int) $_GET['bbp_forum_id'] . '">', $retval );
+		return $retval;
 	}
 
 	/**

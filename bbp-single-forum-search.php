@@ -23,6 +23,13 @@ add_action( 'bbp_includes', array( 'bbP_Single_Forum_Search', 'init' ) );
  */
 class bbP_Single_Forum_Search {
 	/**
+	 * Marker to determine if a user has access to a forum.
+	 *
+	 * @var null|bool
+	 */
+	public static $has_access = null;
+
+	/**
 	 * Init method.
 	 */
 	public static function init() {
@@ -112,6 +119,48 @@ class bbP_Single_Forum_Search {
 	<?php
 	}
 
+	/**
+	 * Static method to see if the current user has access to a specific forum ID.
+	 *
+	 * @param  int $forum_id The forum ID
+	 * @return bool
+	 */
+	public static function has_access( $forum_id = 0 ) {
+		if ( false === is_null( self::$has_access ) ) {
+			return self::$has_access;
+		}
+
+		$access = true;
+
+		// BuddyPress group forum
+		if ( function_exists( 'bbp_get_forum_group_ids' ) ) {
+			$group_id = bbp_get_forum_group_ids( $forum_id );
+			if ( ! empty( $group_id ) ) {
+				$group = groups_get_group( array(
+					'group_id' => $group_id[0]
+				) );
+
+				if ( false === bp_group_is_visible( $group ) ) {
+					$access = false;
+				}
+			}
+		}
+
+		// Forum is private and user cannot access
+		if ( $access && bbp_is_forum_private( $forum_id ) && ! current_user_can( 'read_private_forums' ) ) {
+			$access = false;
+		}
+
+		// Forum is hidden and user cannot access
+		if ( $access && bbp_is_forum_hidden( $forum_id ) && ! current_user_can( 'read_hidden_forums' ) ) {
+			$access = false;
+		}
+
+		self::$has_access = $access;
+
+		return $access;
+	}
+
 	/*
 	 * Filter the forum search query to search for a specific forum.
 	 *
@@ -126,7 +175,13 @@ class bbP_Single_Forum_Search {
 		//Get the submitted forum ID (from the hidden field added in step 2)
 		$forum_id = (int) $_GET['bbp_forum_id'];
 
-		//If the forum ID exits, filter the query
+		// Current user does not have access, so force no results query
+		if ( false === self::has_access( $forum_id ) ) {
+			$r['post__in'] = array( 0 );
+			return $r;
+		}
+
+		// If the forum ID exists, filter the query
 		if ( ! empty( $forum_id ) ) {
 			$r['meta_query'] = array( array(
 				'key'     => '_bbp_forum_id',
@@ -185,6 +240,11 @@ class bbP_Single_Forum_Search {
 		}
 
 		$forum_id = (int) $_GET['bbp_forum_id'];
+
+		// Do not filter title if user does not have access to the forum
+		if ( false === self::has_access( $forum_id ) ) {
+			return $retval;
+		}
 
 		// don't show this in the breadcrumb
 		remove_filter( 'bbp_get_search_title', array( $this, 'modify_search_title' ), 10, 2 );

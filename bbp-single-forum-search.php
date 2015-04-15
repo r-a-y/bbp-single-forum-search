@@ -33,7 +33,9 @@ class bbP_Single_Forum_Search {
 	 * Constructor.
 	 */
 	public function __construct() {
-		add_action( 'bbp_template_before_single_forum',         array( $this, 'add_search_form' ) );
+		add_action( 'bbp_template_before_pagination_loop', array( $this, 'add_search_form' ) );
+		add_action( 'wp_head',                             array( $this, 'inline_css' ), 999 );
+
 		add_filter( 'bbp_after_has_search_results_parse_args' , array( $this, 'modify_search_results_query' ) );
 		add_filter( 'bbp_get_search_pagination_links',          array( $this, 'modify_search_pagination_links' ) );
 		add_filter( 'bbp_get_search_results_url',               array( $this, 'modify_search_results_url' ) );
@@ -44,6 +46,11 @@ class bbP_Single_Forum_Search {
 	 * Add search form to single forum index pages.
 	 */
 	public function add_search_form(){
+		if ( ! did_action( 'bbp_template_before_single_forum' ) ) {
+			return;
+		}
+		remove_action( 'bbp_template_before_pagination_loop', array( $this, 'add_search_form' ) );
+
 		// object buffer the search form template part so we can modify it later
 		ob_start();
 		bbp_get_template_part( 'form', 'search' );
@@ -56,17 +63,53 @@ class bbP_Single_Forum_Search {
 		if ( ! empty( $forum_id ) ) {
 			$input = '<input type="hidden" name="bbp_search_forum_id" value="' . $forum_id . '" />';
 			$form = str_replace( '</form>', $input . '</form>', $form );
+
+			$placeholder = esc_attr__( 'Search Forum Posts...', 'bbp-single-forum-search' );
+			$form = str_replace( 'id="bbp_search"', 'id="bbp_search" placeholder="' . $placeholder . '"', $form );
 		}
 
 		// output the search form
-		// some themes might have to override the inline CSS...
 	?>
 
-		<div class="bbp-search-form" style="float:none; margin-bottom:1.5em;">
+		<div class="bbp-search-form">
 	    		<?php echo $form; ?>
 		</div>
 
 	    <?php
+	}
+
+	/**
+	 * Inline CSS.
+	 *
+	 * Disable with the 'bbp_single_forum_search_enable_css' filter.
+	 */
+	public function inline_css() {
+		if ( false === (bool) apply_filters( 'bbp_single_forum_search_enable_css', true ) ) {
+			return;
+		}
+
+		$bail = true;
+
+		if ( function_exists( 'bp_is_current_action' ) && bp_is_current_action( 'forum' ) ) {
+			$bail = false;
+		}
+
+		if ( $bail && bbp_is_single_forum() ) {
+			$bail = false;
+		}
+
+		if ( $bail ) {
+			return;
+		}
+	?>
+
+		<style type="text/css">
+			#bbp-search-form {float:right; margin-bottom:1.5em;}
+			#bbpress-forums #bbp-search-form #bbp_search {width:160px; padding:4px;}
+			.bbp-pagination {width:auto; line-height:2.5;}
+		</style>
+
+	<?php
 	}
 
 	/*

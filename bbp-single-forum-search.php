@@ -145,9 +145,9 @@ class bbP_Single_Forum_Search {
 					$access = false;
 				}
 
-				if ( 'hidden' === $group->status && true === $access && is_user_logged_in() ) {
-					add_filter( 'map_meta_cap', array( __CLASS__, 'allow_read_hidden_forums' ), 10, 4 );
-					add_action( 'loop_start', array( __CLASS__, 'remove_read_hidden_forums_cap' ) );
+				if ( 'public' !== $group->status && true === $access && is_user_logged_in() ) {
+					add_filter( 'map_meta_cap', array( __CLASS__, 'allow_read_forums' ), 10, 4 );
+					add_action( 'loop_start', array( __CLASS__, 'remove_read_forums_cap' ) );
 				}
 			}
 		}
@@ -202,7 +202,7 @@ class bbP_Single_Forum_Search {
 	}
 
 	/**
-	 * Allow users to read hidden forums.
+	 * Allow users to read private and hidden forums.
 	 *
 	 * @param array  $caps    Returns the user's actual capabilities.
 	 * @param string $cap     Capability name.
@@ -210,11 +210,11 @@ class bbP_Single_Forum_Search {
 	 * @param array  $args    Adds the context to the cap. Typically the object ID.
 	 * @return array
 	 */
-	public static function allow_read_hidden_forums( $caps, $cap, $user_id, $args ) {
+	public static function allow_read_forums( $caps, $cap, $user_id, $args ) {
 		switch ( $cap ) {
 			case 'read_hidden_forums' :
+			case 'read_private_forums' :
 			//case 'read_private_multiple_post_types' :
-			//case 'read_private_forums' :
 				break;
 
 			default :
@@ -226,10 +226,10 @@ class bbP_Single_Forum_Search {
 	}
 
 	/**
-	 * Remove 'read_hidden_forums' cap on the 'loop_start' hook.
+	 * Remove our additional read caps on the 'loop_start' hook.
 	 */
-	public static function remove_read_hidden_forums_cap() {
-		remove_filter( 'map_meta_cap', array( __CLASS__, 'allow_read_hidden_forums' ), 10, 4 );
+	public static function remove_read_forums_cap() {
+		remove_filter( 'map_meta_cap', array( __CLASS__, 'allow_read_forums' ), 10, 4 );
 	}
 
 	/**

@@ -47,6 +47,12 @@ class bbP_Single_Forum_Search {
 		add_filter( 'bbp_get_search_pagination_links',          array( $this, 'modify_search_pagination_links' ) );
 		add_filter( 'bbp_get_search_results_url',               array( $this, 'modify_search_results_url' ) );
 		add_filter( 'bbp_get_search_title',                     array( $this, 'modify_search_title' ), 10, 2 );
+
+		// BuddyPress integration
+		if ( function_exists( 'buddypress' ) ) {
+			require dirname( __FILE__ ) . '/buddypress.php';
+			bbP_BP_Single_Forum_Search::init();
+		}
 	}
 
 	/**
@@ -114,6 +120,10 @@ class bbP_Single_Forum_Search {
 			#bbp-search-form {float:right; margin-bottom:1.5em;}
 			#bbpress-forums #bbp-search-form #bbp_search {width:160px; padding:4px;}
 			.bbp-pagination {width:auto; line-height:2.5;}
+
+			<?php if ( function_exists( 'buddypress' ) && bp_is_action_variable( bbP_BP_Single_Forum_Search::$slug ) ) : ?>
+				body.group-bbpress-forum .bbp-pagination {float:right;}
+			<?php endif; ?>
 		</style>
 
 	<?php
@@ -176,12 +186,16 @@ class bbP_Single_Forum_Search {
 	 * @return array
 	 */
 	public function modify_search_results_query( $r ){
+		//Get the submitted forum ID (from the hidden field added in step 2)
 		if ( empty( $_GET['bbp_forum_id'] ) ) {
-			return $r;
+			$forum_id = (int) get_query_var( 'bbp_forum_id' );
+		} else {
+			$forum_id = (int) $_GET['bbp_forum_id'];
 		}
 
-		//Get the submitted forum ID (from the hidden field added in step 2)
-		$forum_id = (int) $_GET['bbp_forum_id'];
+		if ( empty( $forum_id ) ) {
+			return $r;
+		}
 
 		// Current user does not have access, so force no results query
 		if ( false === self::has_access( $forum_id ) ) {

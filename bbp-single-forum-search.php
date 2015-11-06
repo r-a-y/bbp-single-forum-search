@@ -48,6 +48,9 @@ class bbP_Single_Forum_Search {
 		add_filter( 'bbp_get_search_results_url',               array( $this, 'modify_search_results_url' ) );
 		add_filter( 'bbp_get_search_title',                     array( $this, 'modify_search_title' ), 10, 2 );
 
+		// Hook for plugin devs!
+		do_action( 'bbp_single_forum_search_loaded', $this );
+
 		// BuddyPress integration
 		if ( function_exists( 'buddypress' ) ) {
 			require dirname( __FILE__ ) . '/buddypress.php';

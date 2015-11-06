@@ -125,7 +125,7 @@ class bbP_Single_Forum_Search {
 			.bbp-pagination {width:auto; line-height:2.5;}
 
 			<?php if ( function_exists( 'buddypress' ) && bp_is_action_variable( bbP_BP_Single_Forum_Search::$slug ) ) : ?>
-				body.group-bbpress-forum .bbp-pagination {float:right;}
+				body.group-bbpress-forum .bbp-pagination {clear:both; width:100%;}
 			<?php endif; ?>
 		</style>
 

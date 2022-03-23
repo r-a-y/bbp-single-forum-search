@@ -74,6 +74,10 @@ class bbP_BP_Single_Forum_Search {
 		}
 
 		$search_term = sanitize_title( bp_action_variable( 1 ) );
+
+		// If there are multiple search terms, must replace hyphen with space.
+		$search_term = str_replace( '-', ' ', $search_term );
+
 		$forum_id = bbp_get_group_forum_ids();
 		$page = bp_action_variable( 3 );
 

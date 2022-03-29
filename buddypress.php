@@ -79,11 +79,12 @@ class bbP_BP_Single_Forum_Search {
 		$forum_id = bbp_get_group_forum_ids();
 		$page = bp_action_variable( 3 );
 
+		// Set forum ID.
 		set_query_var( 'bbp_forum_id', $forum_id[0] );
 
-		// pagination
+		// Set pagination page number if applicable.
 		if ( ! empty( $page ) ) {
-			set_query_var( 'paged', $page );
+			set_query_var( 'paged', (int) $page );
 		}
 
 		// Run search shortcode.
@@ -105,7 +106,7 @@ class bbP_BP_Single_Forum_Search {
 	}
 
 	/**
-	 * Modify the search results URL for BP group forum searches.
+	 * Modify the search results redirect URL for BP group forum searches.
 	 *
 	 * @param  string $retval
 	 * @return string
@@ -121,7 +122,7 @@ class bbP_BP_Single_Forum_Search {
 	}
 
 	/**
-	 * Modify the search pagination for BP group forum searches.
+	 * Modify the search pagination base for BP group forum searches.
 	 *
 	 * @param  array $retval Current pagination args.
 	 * @return array
@@ -131,6 +132,11 @@ class bbP_BP_Single_Forum_Search {
 			return $retval;
 		}
 
+		/*
+		 * No need to URL encode.
+		 *
+		 * add_query_arg() already handles this in paginate_links().
+		 */
 		$retval['base'] = $this->get_search_url() . bp_action_variable( 1 ) . $retval['base'];
 		return $retval;
 	}

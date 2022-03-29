@@ -73,10 +73,8 @@ class bbP_BP_Single_Forum_Search {
 			return $retval;
 		}
 
-		$search_term = sanitize_title( bp_action_variable( 1 ) );
-
-		// If there are multiple search terms, must replace hyphen with space.
-		$search_term = str_replace( '-', ' ', $search_term );
+		// Set search term.
+		set_query_var( bbp_get_search_rewrite_id(), urldecode( bp_action_variable( 1 ) ) );
 
 		$forum_id = bbp_get_group_forum_ids();
 		$page = bp_action_variable( 3 );
@@ -88,7 +86,8 @@ class bbP_BP_Single_Forum_Search {
 			set_query_var( 'paged', $page );
 		}
 
-		echo do_shortcode( "[bbp-search search='{$search_term}']" );
+		// Run search shortcode.
+		echo do_shortcode( "[bbp-search]" );
 	}
 
 	/**
@@ -116,7 +115,9 @@ class bbP_BP_Single_Forum_Search {
 			return $retval;
 		}
 
-		return trailingslashit( $this->get_search_url() . sanitize_title( $_GET['bbp_search'] ) );
+		$term = urlencode( stripslashes( $_GET['bbp_search'] ) );
+
+		return trailingslashit( $this->get_search_url() . $term );
 	}
 
 	/**
@@ -130,7 +131,7 @@ class bbP_BP_Single_Forum_Search {
 			return $retval;
 		}
 
-		$retval['base'] = $this->get_search_url() . sanitize_title( bp_action_variable( 1 ) ) . $retval['base'];
+		$retval['base'] = $this->get_search_url() . bp_action_variable( 1 ) . $retval['base'];
 		return $retval;
 	}
 

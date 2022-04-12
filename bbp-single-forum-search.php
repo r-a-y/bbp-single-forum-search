@@ -119,18 +119,24 @@ class bbP_Single_Forum_Search {
 			$bail = false;
 		}
 
+		if ( bbp_is_search() ) {
+			$bail = false;
+		}
+
 		if ( $bail ) {
 			return;
 		}
 	?>
 
 		<style type="text/css">
-			#bbp-search-form {float:right; margin-bottom:1.5em;}
-			#bbpress-forums #bbp-search-form #bbp_search {width:160px; padding:4px;}
-			.bbp-pagination {width:auto; line-height:2.5;}
+			#bbp-search-form {margin-bottom:1.5em;}
+			#bbp-search-form #bbp_search {padding:4px;}
+			#bbp-search-results .bbp-topic-title-meta {display:none;}
 
-			<?php if ( function_exists( 'buddypress' ) && bp_is_action_variable( bbP_BP_Single_Forum_Search::$slug ) ) : ?>
-				body.groups.forum .bbp-pagination {clear:both; width:100%;}
+			<?php if ( function_exists( 'buddypress' ) && bp_is_current_action( 'forum' ) && ( ! bp_action_variable() || bp_is_action_variable( 'page', 0 ) ) ) : ?>
+				#bbp-search-form {float:right;}
+				.bbp-search-form + .bbp-pagination {width:auto; line-height:2.5;}
+				#bbpress-forums #bbp-search-form #bbp_search {width:160px;}
 			<?php endif; ?>
 		</style>
 

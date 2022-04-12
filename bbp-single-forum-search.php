@@ -42,6 +42,7 @@ class bbP_Single_Forum_Search {
 	public function __construct() {
 		add_action( 'bbp_template_before_pagination_loop', array( $this, 'add_search_form' ) );
 		add_action( 'wp_head',                             array( $this, 'inline_css' ), 999 );
+		add_action( 'get_template_part_content',           array( $this, 'modify_search_results' ), 10, 2 );
 
 		add_filter( 'bbp_after_has_search_results_parse_args' , array( $this, 'modify_search_results_query' ) );
 		add_filter( 'bbp_get_search_pagination_links',          array( $this, 'modify_search_pagination_links' ) );
@@ -310,6 +311,50 @@ class bbP_Single_Forum_Search {
 		remove_filter( 'bbp_get_search_title', array( $this, 'modify_search_title' ), 10, 2 );
 
 		return sprintf( esc_html__( "Search results for '%s' from the forum %s", 'bbp-single-forum-search' ), esc_attr( $search_terms ), '<a href="' . bbp_get_forum_permalink( $forum_id ) .'">' . bbp_get_forum_title( $forum_id ) . '</a>' );
+	}
+
+	/**
+	 * Search results modifications.
+	 *
+	 * Specifically:
+	 *   - Adds a search form above the search results
+	 *   - Adds a search results header for BuddyPress forum search results
+	 *   - Modifies search breadcrumb to remove redundant information
+	 *
+	 * @param string $slug Template part slug
+	 * @param string $name Template part name
+	 */
+	public function modify_search_results( $slug, $name ) {
+		if ( 'search' !== $name ) {
+			return;
+		}
+
+		// Add search results header on BuddyPress forum page.
+		if ( function_exists( 'bp_is_group' ) && bp_is_group() ) {
+			$forum_id = get_query_var( 'bbp_forum_id' );
+
+			$header = sprintf( esc_html__( 'Search results for "%s"', 'bbp-single-forum-search' ), esc_attr( bbp_get_search_terms() ) );
+
+			printf( '<h3 class="search-results-header">%s</h3>', $header );
+
+		} elseif ( ! empty( $_GET['bbp_forum_id'] ) ) {
+			$forum_id = $_GET['bbp_forum_id'];
+		}
+
+		// Add search form on search results page.
+		if ( ! empty( $forum_id ) ) {
+			self::output_search_form( $forum_id );
+		}
+
+		// Modify bbPress breadcrumb.
+		$breadcrumb = function( $r ) {
+			// Remove "Search results for X" as it's redundant.
+			unset( $r[3] );
+
+			return $r;
+		};
+
+		add_filter( 'bbp_breadcrumbs', $breadcrumb );
 	}
 }
 endif;

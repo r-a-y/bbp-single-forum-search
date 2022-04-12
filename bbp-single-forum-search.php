@@ -61,11 +61,22 @@ class bbP_Single_Forum_Search {
 	/**
 	 * Add search form to single forum index pages.
 	 */
-	public function add_search_form(){
+	public function add_search_form() {
 		if ( ! did_action( 'bbp_template_before_single_forum' ) ) {
 			return;
 		}
 		remove_action( 'bbp_template_before_pagination_loop', array( $this, 'add_search_form' ) );
+
+		self::output_search_form();
+	}
+
+	/**
+	 * Output search form.
+	 */
+	public static function output_search_form( $forum_id = 0 ){
+		if ( empty( $forum_id ) ) {
+			$forum_id = bbp_get_forum_id();
+		}
 
 		// object buffer the search form template part so we can modify it later
 		ob_start();
@@ -74,10 +85,9 @@ class bbP_Single_Forum_Search {
 		ob_end_clean();
 
 		// inject our custom hidden input field into the search form
-		$forum_id = bbp_get_forum_id();
 		$input = '';
 		if ( ! empty( $forum_id ) ) {
-			$input = '<input type="hidden" name="bbp_search_forum_id" value="' . $forum_id . '" />';
+			$input = '<input type="hidden" name="bbp_search_forum_id" value="' . (int) $forum_id . '" />';
 			$form = str_replace( '</form>', $input . '</form>', $form );
 
 			$placeholder = esc_attr__( 'Search Forum Posts...', 'bbp-single-forum-search' );
@@ -85,13 +95,7 @@ class bbP_Single_Forum_Search {
 		}
 
 		// output the search form
-	?>
-
-		<div class="bbp-search-form">
-	    		<?php echo $form; ?>
-		</div>
-
-	    <?php
+		printf( '<div class="bbp-search-form">%s</div>', $form );
 	}
 
 	/**

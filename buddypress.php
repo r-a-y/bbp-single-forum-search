@@ -142,7 +142,7 @@ class bbP_BP_Single_Forum_Search {
 	}
 
 	/**
-	 * Modify breadcrumb during BP group searches.
+	 * Remove breadcrumb during BP group searches as it is redundant.
 	 *
 	 * @param  array $r Current breadcrumb values.
 	 * @return array
@@ -152,16 +152,7 @@ class bbP_BP_Single_Forum_Search {
 			return $r;
 		}
 
-		// Home
-		$r[0] = '<a href="' . bp_get_group_permalink( groups_get_current_group() ). '">' . _x( 'Home', 'Group screen navigation title', 'buddypress' ) . '</a>';
-
-		// Group forum
-		$r[1] = '<a href="' . bp_get_group_permalink( groups_get_current_group() ). 'forum/">' . __( 'Forum', 'bbpress' ) . '</a>';
-
-		// Search - remove this one
-		unset( $r[2] );
-
-		return $r;
+		return [];
 	}
 
 	/**

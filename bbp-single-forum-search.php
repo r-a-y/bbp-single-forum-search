@@ -155,37 +155,15 @@ class bbP_Single_Forum_Search {
 		}
 
 		$access = true;
-		$group  = false;
 
-		// BuddyPress group forum
-		if ( function_exists( 'bbp_get_forum_group_ids' ) ) {
-			$group_id = bbp_get_forum_group_ids( $forum_id );
-			if ( ! empty( $group_id ) ) {
-				$group = groups_get_group( array(
-					'group_id' => $group_id[0]
-				) );
-
-				if ( false === bp_group_is_visible( $group ) ) {
-					$access = false;
-				}
-
-				if ( 'public' !== $group->status && true === $access && is_user_logged_in() ) {
-					add_filter( 'map_meta_cap', array( __CLASS__, 'allow_read_forums' ), 10, 4 );
-					add_action( 'loop_start', array( __CLASS__, 'remove_read_forums_cap' ) );
-				}
-			}
+		// Forum is private and user cannot access
+		if ( $access && bbp_is_forum_private( $forum_id ) && ! current_user_can( 'read_private_forums' ) ) {
+			$access = false;
 		}
 
-		if ( empty( $group ) ) {
-			// Forum is private and user cannot access
-			if ( $access && bbp_is_forum_private( $forum_id ) && ! current_user_can( 'read_private_forums' ) ) {
-				$access = false;
-			}
-
-			// Forum is hidden and user cannot access
-			if ( $access && bbp_is_forum_hidden( $forum_id ) && ! current_user_can( 'read_hidden_forums' ) ) {
-				$access = false;
-			}
+		// Forum is hidden and user cannot access
+		if ( $access && bbp_is_forum_hidden( $forum_id ) && ! current_user_can( 'read_hidden_forums' ) ) {
+			$access = false;
 		}
 
 		self::$has_access = $access;
@@ -200,7 +178,7 @@ class bbP_Single_Forum_Search {
 	 * @return array
 	 */
 	public function modify_search_results_query( $r ){
-		//Get the submitted forum ID (from the hidden field added in step 2)
+		// Get the submitted forum ID.
 		if ( empty( $_GET['bbp_forum_id'] ) ) {
 			$forum_id = (int) get_query_var( 'bbp_forum_id' );
 		} else {
@@ -208,12 +186,6 @@ class bbP_Single_Forum_Search {
 		}
 
 		if ( empty( $forum_id ) ) {
-			return $r;
-		}
-
-		// Current user does not have access, so force no results query
-		if ( false === self::has_access( $forum_id ) ) {
-			$r['post__in'] = array( 0 );
 			return $r;
 		}
 
@@ -227,37 +199,6 @@ class bbP_Single_Forum_Search {
 		}
 
 		return $r;
-	}
-
-	/**
-	 * Allow users to read private and hidden forums.
-	 *
-	 * @param array  $caps    Returns the user's actual capabilities.
-	 * @param string $cap     Capability name.
-	 * @param int    $user_id The user ID.
-	 * @param array  $args    Adds the context to the cap. Typically the object ID.
-	 * @return array
-	 */
-	public static function allow_read_forums( $caps, $cap, $user_id, $args ) {
-		switch ( $cap ) {
-			case 'read_hidden_forums' :
-			case 'read_private_forums' :
-			//case 'read_private_multiple_post_types' :
-				break;
-
-			default :
-				return $caps;
-				break;
-		}
-
-		return array( 'exist' );
-	}
-
-	/**
-	 * Remove our additional read caps on the 'loop_start' hook.
-	 */
-	public static function remove_read_forums_cap() {
-		remove_filter( 'map_meta_cap', array( __CLASS__, 'allow_read_forums' ), 10, 4 );
 	}
 
 	/**
